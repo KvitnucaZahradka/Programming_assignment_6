@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+<title>Reproductive data assignment 1</title>
+
+<script src="eps_files/jquery-1.11.0/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link href="eps_files/bootstrap-2.3.2/css/bootstrap.min.css" rel="stylesheet" />
+<link href="eps_files/bootstrap-2.3.2/css/bootstrap-responsive.min.css" rel="stylesheet" />
+<script src="eps_files/bootstrap-2.3.2/js/bootstrap.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<link rel="stylesheet"
+      href="eps_files/highlight/default.css"
+      type="text/css" />
+<script src="eps_files/highlight/highlight.js"></script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+<div class="container-fluid main-container">
+
+
+<div id="header">
+<h1 class="title">Reproductive data assignment 1</h1>
+</div>
+
+
+<div id="what-is-mean-total-number-of-steps-taken-per-day" class="section level2">
+<h2>What is mean total number of steps taken per day?</h2>
+<p>We read the .csv file first using the read.csv function. In first assignment we were supposed to calculate the number of steps per day. For that reason I used the group_by function and then using the function summarise I calculated the number of steps.</p>
+<pre class="r"><code>library(dplyr)</code></pre>
+<pre><code>## 
+## Attaching package: &#39;dplyr&#39;
+## 
+## The following object is masked from &#39;package:stats&#39;:
+## 
+##     filter
+## 
+## The following objects are masked from &#39;package:base&#39;:
+## 
+##     intersect, setdiff, setequal, union</code></pre>
+<pre class="r"><code>data&lt;-read.csv(&quot;activity.csv&quot;)
+group&lt;-group_by(data,date)
+stp&lt;-summarise(group,sum(steps,na.rm=T))
+names(stp)=c(&quot;date&quot;,&quot;sum&quot;)</code></pre>
+<p>Now the data of the previous code should be represented as a histogram</p>
+<pre class="r"><code>library(ggplot2)
+qplot(sum, data=stp, geom=&quot;histogram&quot;)</code></pre>
+<pre><code>## stat_bin: binwidth defaulted to range/30. Use &#39;binwidth = x&#39; to adjust this.</code></pre>
+<p><img src="eps_files/figure-html/unnamed-chunk-2-1.png" /></p>
+<p>Mean of the total number of steps is: 9354.2295082.</p>
+<p>Median of the total number of steps is: 10395.</p>
+</div>
+<div id="what-is-the-average-daily-activity-pattern" class="section level2">
+<h2>What is the average daily activity pattern?</h2>
+<p>The time series plot of the average number of steps taken, averaged across all days</p>
+<pre class="r"><code>inter&lt;-group_by(data,interval)
+meal&lt;-summarise(inter,mean(steps,na.rm=T))
+names(meal)&lt;-c(&quot;interval&quot;,&quot;mean&quot;)
+ggplot(meal, aes(interval, mean)) + geom_line() + xlab(&quot;&quot;) + ylab(&quot;mean of # of steps&quot;)</code></pre>
+<p><img src="eps_files/figure-html/unnamed-chunk-3-1.png" /></p>
+<p>The maximum value of steps occured in the 5 minute interval of the number: 835</p>
+<p>I found this number by:</p>
+<pre class="r"><code>meal$interval[meal$mean==max(meal$mean,na.rm=T)]</code></pre>
+<pre><code>## [1] 835</code></pre>
+</div>
+<div id="imputing-missing-values" class="section level2">
+<h2>Imputing missing values</h2>
+<p>The number of the missing values is 17568.</p>
+<p>It was calculated using:</p>
+<pre class="r"><code>length(data$steps[data$steps==NA])</code></pre>
+<pre><code>## [1] 17568</code></pre>
+<p>We can replace the NA values using one of the strategies suggested in the assignment. I will use the NA replaced by the mean found in previous “average over dates” procedure:</p>
+<pre class="r"><code>x&lt;-data.frame(data$interval,data$steps)
+for(i in 1:nrow(x)){if(is.na(x$data.steps[i])){x$data.steps[i]&lt;-meal$mean[meal$interval==x$data.interval[i]]}}
+names(x)&lt;-c(&quot;interval&quot;,&quot;steps&quot;)</code></pre>
+<p>Creating a new dataset, that is equal to the original, but with the NA values replaced by the above procedure:</p>
+<pre class="r"><code>ndat&lt;-data.frame(x$steps,data$date,x$interval)
+names(ndat)&lt;-c(&quot;steps&quot;,&quot;date&quot;,&quot;interval&quot;)</code></pre>
+<p>Now I will do the same type of histogram as before, difference is the use of the new data frame “ndat” with modeled values of NA:</p>
+<pre class="r"><code>group&lt;-group_by(ndat,date)
+stp&lt;-summarise(group,sum(steps,na.rm=T))
+names(stp)=c(&quot;date&quot;,&quot;sum&quot;)
+qplot(sum, data=stp, geom=&quot;histogram&quot;)</code></pre>
+<pre><code>## stat_bin: binwidth defaulted to range/30. Use &#39;binwidth = x&#39; to adjust this.</code></pre>
+<p><img src="eps_files/figure-html/unnamed-chunk-8-1.png" /></p>
+<p>Mean of the total number of steps is: 1.076618910^{4}.</p>
+<p>Median of the total number of steps is: 1.076618910^{4}.</p>
+<p>The conclusion might be that implementing the missing values as the model described above. We might see two main things:</p>
+<p>the number of steps in the zeroth bin has been significantly decreased. What is expected because we know that the original very high number of steps in the zeroth bin is highly spoiled by the NA-&gt;0 replacement in the original procedure.</p>
+<p>the mean and median are slightly higher and also the maximum has been increased.</p>
+</div>
+<div id="are-there-differences-in-activity-patterns-between-weekdays-and-weekends" class="section level2">
+<h2>Are there differences in activity patterns between weekdays and weekends?</h2>
+<pre class="r"><code>mm&lt;-cbind(ndat,data.frame(weekdays(as.Date(data$date))))
+names(mm)&lt;-c(names(data),&quot;weekdays&quot;)
+mm$weekdays&lt;-as.character(mm$weekdays)
+for(i in 1:nrow(mm)){if(mm$weekdays[i]==c(&quot;Saturday&quot;)|mm$weekdays[i]==c(&quot;Sunday&quot;)){mm$weekdays[i]&lt;-&quot;weekend&quot;}else{mm$weekdays[i]&lt;-&quot;weekday&quot;}}
+mm$weekdays&lt;-as.factor(mm$weekdays)
+head(mm)</code></pre>
+<pre><code>##       steps       date interval weekdays
+## 1 1.7169811 2012-10-01        0  weekday
+## 2 0.3396226 2012-10-01        5  weekday
+## 3 0.1320755 2012-10-01       10  weekday
+## 4 0.1509434 2012-10-01       15  weekday
+## 5 0.0754717 2012-10-01       20  weekday
+## 6 2.0943396 2012-10-01       25  weekday</code></pre>
+<p>Now I will panel plot the time series of of the 5-minute interva and the average number of steps taken, averaged across all weekday days or weekend days:</p>
+<pre class="r"><code>ex&lt;-group_by(mm,interval,weekdays)
+juch&lt;-summarise(ex,mean(steps,na.rm=T))
+names(juch)&lt;-c(&quot;interval&quot;,&quot;weekdays&quot;,&quot;mean&quot;)
+g&lt;-ggplot(juch,aes(interval,mean))
+p&lt;-g+geom_line()+facet_grid(weekdays ~ .,scales = &quot;free&quot;) + ggtitle(&quot;Average number of steps&quot;)
+p</code></pre>
+<p><img src="eps_files/figure-html/unnamed-chunk-10-1.png" /></p>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
